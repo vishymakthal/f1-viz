@@ -3,6 +3,7 @@ import logging
 import re
 import requests
 from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
 
 log = logging.Logger(__name__, level=logging.INFO)
 
@@ -67,7 +68,8 @@ def tally_results(season):
     print('==' + str(season) + '==')
     with open(f'tallies/tally_{season}.csv', 'w') as f:
 
-        races = map(lambda x: x.a.text, rows[0].find_all('th')[2:-1])
+        races = list(map(lambda x: x.a.text, rows[0].find_all('th')[2:-1]))
+        print(races)
         f.write('Driver,' + ','.join(races)+'\n')
         for row in rows[1:-2]:
             tally = []
@@ -101,12 +103,39 @@ def tally_results(season):
             
             f.write(driver + ',' + ','.join(map(lambda x: str(x), tally)) + '\n')
 
+def graph_tallies(season):
+
+    print('==' + str(season) + '==')
+    with open(f'tallies/tally_{season}.csv', 'r') as f:
+        d = f.readlines()
+        races = d[0].split(',')[1:]
+
+        for driver in d[1:]:
+            data = driver.split(',')
+            if len(races) != len(data[1:]):
+                print(data)
+            tallies = [int(x.rstrip()) for x in data[1:]]
+            plt.plot(races, tallies, label=data[0])
+        
+        plt.xlabel('Race')
+        plt.ylabel('Points')
+        plt.title(season)
+        plt.legend(bbox_to_anchor=(0.05, 0.85), loc='upper left', borderaxespad=0.)
+        plt.grid()
+        fig = plt.gcf()
+        fig.set_size_inches(12, 12)
+        fig.savefig(f'graphs/graph_{season}.png')
+        plt.clf()
+        fig.clf()
+
 def main():
 
     log.info("starting up")
-    for season in range(2019,2021):
+
+    for season in range(2015,2021):
         # parse_results(season)
-        tally_results(season)
+        # tally_results(season)
+        graph_tallies(season)
     
 
 if __name__ == '__main__':
